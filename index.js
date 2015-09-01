@@ -16,7 +16,8 @@
 var path        = require('path'),
     os          = require('os'),
     fs          = require('fs'),
-    map         = require('map-stream'),
+    async       = require('async'),
+    es          = require('event-stream'),
     gutil       = require('gulp-util'),
     svg2png     = require('svg2png'),
     PLUGIN_NAME = 'gulp-svg2png';
@@ -28,14 +29,18 @@ var path        = require('path'),
  * @param {boolean} verbose (optional) Should the progress be logged?
  *
  */
-module.exports = function (scale, verbose) {
+module.exports = function (scale, verbose, concurrency) {
 
     if ('boolean' === typeof scale) {
         verbose = scale;
         scale = undefined;
+        concurrency = null;
     }
 
+    var files = [];
+
     scale = scale || 1.0;
+
 
     /**
      * Renames the SVG file to a PNG file (extension)
@@ -171,5 +176,23 @@ module.exports = function (scale, verbose) {
         svg2png(source.path, temp, scale, converted);
     }
 
-    return map(convert);
+    // return map(convert);
+    return es.through(function write (data) {
+      files.push(data);
+    }, function end () {
+       if(concurrency) {
+           async.eachLimit(files, concurrency, function (file, cb) {
+             convert(file, cb);
+           }, function (err) {
+             this.emit('end', err);
+           }.bind(this));
+       } else {
+            async.each(files,function (file, cb) {
+              convert(file, cb);
+            }, function (err) {
+              this.emit('end', err);
+            }.bind(this));
+       }
+
+    });
 };

@@ -33,8 +33,9 @@
     "imagesize": "~1.0.0"
   },
   "dependencies": {
-    "map-stream": "~0.1.0",
-    "svg2png": "~1.1.0",
-    "gulp-util": "~2.2.14"
+    "async": "^1.4.2",
+    "event-stream": "^3.3.1",
+    "gulp-util": "~2.2.14",
+    "svg2png": "~1.1.0"
   }
 }
